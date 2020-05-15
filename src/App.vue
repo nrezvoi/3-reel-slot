@@ -20,7 +20,7 @@
           v-model="debugReel1.line"
         >
           <option
-            v-for="(l, i) in lineTypes"
+            v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
           >{{ l.name }}</option>
@@ -45,7 +45,7 @@
           v-model="debugReel2.line"
         >
           <option
-            v-for="(l, i) in lineTypes"
+            v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
           >{{ l.name }}</option>
@@ -70,7 +70,7 @@
           v-model="debugReel3.line"
         >
           <option
-            v-for="(l, i) in lineTypes"
+            v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
           >{{ l.name }}</option>
@@ -79,16 +79,16 @@
     </div>
     <div class="flex space-x-3">
       <button
+        :disabled="isRunning"
         @click="spin"
         class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
       >Spin</button>
-      <button
-        @click="stopSpin"
-        class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
-      >Stop</button>
     </div>
     <div class="flex mt-4 space-x-3">
-      <reel :is-spinning="isSpinning" />
+      <reel
+        ref="reel1"
+        @stop="onReelStop"
+      />
     </div>
   </div>
 </template>
@@ -107,7 +107,7 @@ export default {
   },
   data() {
     return {
-      isSpinning: false,
+      isRunning: false,
       userBalance: 5000,
       isDebug: false,
       symbolTypes: symbolTypes,
@@ -126,12 +126,23 @@ export default {
       }
     }
   },
+  computed: {
+    availableDebugLines() {
+      return lineTypes.filter(l => l.name !== 'any')
+    }
+  },
   methods: {
     spin() {
-      this.isSpinning = true
+      this.isRunning = true
+      const winner = {
+        symbolId: this.debugReel1.symbol,
+        line: { ...lineTypes.find(l => l.id === this.debugReel1.line) }
+      }
+      this.$refs.reel1.start(winner)
     },
-    stopSpin() {
-      this.isSpinning = false
+    onReelStop() {
+      this.isRunning = false
+      console.log('reel stoppped!')
     }
   }
 }

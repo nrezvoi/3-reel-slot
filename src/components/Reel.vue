@@ -98,7 +98,7 @@ export default {
           { ...symbolTypes[winnerIndex] },
           { ...symbolTypes[nextSymbolIndex] }
         )
-      } else {
+      } else if (this.winnerSymbol.line.name === 'bot') {
         const previosSymbolIndex =
           winnerIndex - 1 < 0 ? symbolTypes.length - 1 : winnerIndex - 1
         symbols.push(
@@ -114,7 +114,20 @@ export default {
     }
   },
   methods: {
-    spinReel() {
+    start({ symbolId, line }) {
+      this.winnerSymbol = {
+        id: symbolId,
+        line: line
+      }
+      console.log(this.winnerSymbol)
+      this.isAnimationRunning = true
+      this.$nextTick(() => {
+        requestAnimationFrame(() => {
+          this._spinReel()
+        })
+      })
+    },
+    _spinReel() {
       this.$refs.spinContainer.style.willChange = 'transform'
       const startSpinning = () => {
         this.$refs.spinContainer.style.transition = 'transform 0.1s linear'
@@ -134,6 +147,10 @@ export default {
       startSpinning()
       this.$refs.spinContainer['_animCallback'] = callback
       this.$refs.spinContainer.addEventListener('transitionend', callback)
+
+      setTimeout(() => {
+        this.stopReel()
+      }, 2000)
     },
     stopReel() {
       if (!this.isAnimationRunning) {
@@ -146,21 +163,8 @@ export default {
       // wait for all transitions to finish
       this.$refs.spinContainer.addEventListener('transitionend', () => {
         this.isAnimationRunning = false
+        this.$emit('stop')
       })
-    }
-  },
-  watch: {
-    isSpinning(n) {
-      if (n) {
-        this.isAnimationRunning = true
-        this.$nextTick(() => {
-          requestAnimationFrame(() => {
-            this.spinReel()
-          })
-        })
-      } else {
-        this.stopReel()
-      }
     }
   }
 }
