@@ -119,7 +119,6 @@ export default {
         id: symbolId,
         line: line
       }
-      console.log(this.winnerSymbol)
       this.isAnimationRunning = true
       this.$nextTick(() => {
         requestAnimationFrame(() => {
@@ -147,12 +146,8 @@ export default {
       startSpinning()
       this.$refs.spinContainer['_animCallback'] = callback
       this.$refs.spinContainer.addEventListener('transitionend', callback)
-
-      setTimeout(() => {
-        this.stopReel()
-      }, 2000)
     },
-    stopReel() {
+    stop() {
       if (!this.isAnimationRunning) {
         return
       }

@@ -84,11 +84,24 @@
         class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
       >Spin</button>
     </div>
-    <div class="flex mt-4 space-x-3">
+    <div class="relative inline-flex mt-4 space-x-3">
       <reel
         ref="reel1"
         @stop="onReelStop"
       />
+      <reel
+        ref="reel2"
+        @stop="onReelStop"
+      />
+      <reel
+        ref="reel3"
+        @stop="onReelStop"
+      />
+      <div class="absolute flex flex-col w-full h-full justify-evenly">
+        <div class="h-px bg-yellow-400"></div>
+        <div class="h-px bg-yellow-400"></div>
+        <div class="h-px bg-yellow-400"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -109,7 +122,7 @@ export default {
     return {
       isRunning: false,
       userBalance: 5000,
-      isDebug: false,
+      isDebug: true,
       symbolTypes: symbolTypes,
       lineTypes: lineTypes,
       debugReel1: {
@@ -134,11 +147,34 @@ export default {
   methods: {
     spin() {
       this.isRunning = true
-      const winner = {
-        symbolId: this.debugReel1.symbol,
-        line: { ...lineTypes.find(l => l.id === this.debugReel1.line) }
+      if (this.isDebug) {
+        const reel1Winner = {
+          symbolId: this.debugReel1.symbol,
+          line: { ...lineTypes.find(l => l.id === this.debugReel1.line) }
+        }
+        const reel2Winner = {
+          symbolId: this.debugReel2.symbol,
+          line: { ...lineTypes.find(l => l.id === this.debugReel2.line) }
+        }
+        const reel3Winner = {
+          symbolId: this.debugReel3.symbol,
+          line: { ...lineTypes.find(l => l.id === this.debugReel3.line) }
+        }
+        this.$refs.reel1.start(reel1Winner)
+        this.$refs.reel2.start(reel2Winner)
+        this.$refs.reel3.start(reel3Winner)
+
+        setTimeout(() => {
+          this.$refs.reel1.stop(reel1Winner)
+          setTimeout(() => {
+            this.$refs.reel2.stop(reel1Winner)
+            setTimeout(() => {
+              this.$refs.reel3.stop(reel1Winner)
+              this.isRunning = false
+            }, 500)
+          }, 500)
+        }, 2000)
       }
-      this.$refs.reel1.start(winner)
     },
     onReelStop() {
       this.isRunning = false
