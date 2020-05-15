@@ -4,7 +4,7 @@
     style="height:242px;width:141px"
   >
     <div
-      v-if="isSpinning"
+      v-if="isAnimationRunning"
       ref="spinContainer"
     >
       <div
@@ -14,6 +14,7 @@
         <img
           class="block"
           width="141"
+          style="filter:blur(8px)"
           height="121"
           :src="s.imagePath"
           :alt="s.name"
@@ -55,13 +56,14 @@ export default {
     const firstSymbol = this.spinningSymbols[0]
     const secondSymbol = this.spinningSymbols[1]
     this.spinningSymbols.push({ ...firstSymbol }, { ...secondSymbol })
-    this.maxYOffset = this.height * this.spinningSymbols.length - 2
+    this.maxYOffset = this.height * (this.spinningSymbols.length - 2)
   },
   mounted() {
     // this.spinReel()
   },
   data() {
     return {
+      isAnimationRunning: false,
       height: 121,
       maxYOffset: 0,
       spinningSymbols: JSON.parse(JSON.stringify(symbolTypes)),
@@ -115,7 +117,7 @@ export default {
     spinReel() {
       this.$refs.spinContainer.style.willChange = 'transform'
       const startSpinning = () => {
-        this.$refs.spinContainer.style.transition = 'transform 0.2s linear'
+        this.$refs.spinContainer.style.transition = 'transform 0.1s linear'
         requestAnimationFrame(() => {
           this.$refs.spinContainer.style.transform = `translateY(-${this.maxYOffset}px)`
         })
@@ -130,18 +132,34 @@ export default {
         })
       }
       startSpinning()
+      this.$refs.spinContainer['_animCallback'] = callback
       this.$refs.spinContainer.addEventListener('transitionend', callback)
     },
     stopReel() {
-      console.log('stopped')
+      if (!this.isAnimationRunning) {
+        return
+      }
+      this.$refs.spinContainer.removeEventListener(
+        'transitionend',
+        this.$refs.spinContainer['_animCallback']
+      )
+      // wait for all transitions to finish
+      this.$refs.spinContainer.addEventListener('transitionend', () => {
+        this.isAnimationRunning = false
+      })
     }
   },
   watch: {
     isSpinning(n) {
       if (n) {
-        setTimeout(() => {
-          this.$nextTick(this.spinReel)
-        }, 0)
+        this.isAnimationRunning = true
+        this.$nextTick(() => {
+          requestAnimationFrame(() => {
+            this.spinReel()
+          })
+        })
+      } else {
+        this.stopReel()
       }
     }
   }
