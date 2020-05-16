@@ -87,7 +87,6 @@
     <div class="relative inline-flex mt-4">
       <div class="flex space-x-3">
         <div
-          ref="reel1Container"
           :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
           class="overflow-hidden"
         >
@@ -96,6 +95,41 @@
               v-for="(s, i) in reel1"
               :key="i"
               class="block"
+              :class="{ 'blurred': config.RUNNING }"
+              :width="config.IMAGE_WIDTH"
+              :height="config.IMAGE_HEIGHT"
+              :src="s.imagePath"
+              :alt="s.name"
+            >
+          </div>
+        </div>
+        <div
+          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+          class="overflow-hidden"
+        >
+          <div ref="reel2">
+            <img
+              v-for="(s, i) in reel2"
+              :key="i"
+              class="block"
+              :class="{ 'blurred': config.RUNNING }"
+              :width="config.IMAGE_WIDTH"
+              :height="config.IMAGE_HEIGHT"
+              :src="s.imagePath"
+              :alt="s.name"
+            >
+          </div>
+        </div>
+        <div
+          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+          class="overflow-hidden"
+        >
+          <div ref="reel3">
+            <img
+              v-for="(s, i) in reel3"
+              :key="i"
+              class="block"
+              :class="{ 'blurred': config.RUNNING }"
               :width="config.IMAGE_WIDTH"
               :height="config.IMAGE_HEIGHT"
               :src="s.imagePath"
@@ -130,7 +164,7 @@ export default {
   data() {
     return {
       config: {
-        SLOT_SPEED: 20,
+        SLOT_SPEED: 60,
         SYMBOL_COUNT: 5,
         IMAGE_HEIGHT: 121,
         IMAGE_WIDTH: 141,
@@ -141,6 +175,13 @@ export default {
       symbolTypes: symbolTypes,
       lineTypes: lineTypes,
       reel1: [],
+      reel2: [],
+      reel3: [],
+      latestOffsets: {
+        reel1: 0,
+        reel2: 0,
+        reel3: 0
+      },
       debugReel1: {
         symbol: symbolTypes[0].id,
         line: lineTypes[0].id
@@ -156,8 +197,9 @@ export default {
     }
   },
   created() {
-    const symbols = [...symbolTypes]
-    this.reel1 = symbols
+    this.reel1 = [...symbolTypes]
+    this.reel2 = [...symbolTypes]
+    this.reel3 = [...symbolTypes]
   },
   mounted() {
     // this.start()
@@ -187,36 +229,65 @@ export default {
     },
     start() {
       let that = this
-      let stopAt = null
-      let offset = 0
+      let offsets = {
+        reel1: this.latestOffsets.reel1,
+        reel2: this.latestOffsets.reel2,
+        reel3: this.latestOffsets.reel3
+      }
+      let stopAt = {
+        reel1: null,
+        reel2: null,
+        reel3: null
+      }
+      let stopped = {
+        reel1: false,
+        reel2: false,
+        reel3: false
+      }
       ;(function loop() {
-        if (offset >= that.config.MAX_Y_OFFSET) {
-          const arr = that.reel1.slice(0, 3)
-          that.$refs.reel1.style.transform = `translateY(0)`
-          that.reel1.splice(0, 3)
-          that.reel1.push(...arr)
-          offset = 0
-        }
-        that.$refs.reel1.style.transform = `translateY(-${offset}px)`
-        offset += that.config.SLOT_SPEED
-        if (stopAt) {
-          const stopIndex = that.reel1.findIndex(s => s.id === stopAt.id)
-
-          if (
-            stopIndex > 0 &&
-            stopIndex * that.config.IMAGE_HEIGHT <= that.config.MAX_Y_OFFSET
-          ) {
-            const offsetPos = Math.abs(
-              stopIndex * that.config.IMAGE_HEIGHT -
-                that.config.IMAGE_HEIGHT * stopAt.lineCoeff
+        for (let i = 1; i <= 3; i++) {
+          if (stopped[`reel${i}`]) {
+            continue
+          }
+          if (offsets[`reel${i}`] >= that.config.MAX_Y_OFFSET) {
+            const arr = that[`reel${i}`].slice(0, 3)
+            that.$refs[`reel${i}`].style.transform = `translateY(0)`
+            that[`reel${i}`].splice(0, 3)
+            that[`reel${i}`].push(...arr)
+            offsets[`reel${i}`] = 0
+          }
+          that.$refs[`reel${i}`].style.transform = `translateY(-${
+            offsets[`reel${i}`]
+          }px)`
+          offsets[`reel${i}`] += that.config.SLOT_SPEED
+          if (stopAt[`reel${i}`]) {
+            const stopIndex = that[`reel${i}`].findIndex(
+              s => s.id === stopAt[`reel${i}`].id
             )
 
-            if (offset >= offsetPos) {
-              that.$refs.reel1.style.transform = `translateY(-${offsetPos}px)`
-              that.config.RUNNING = false
-              stopAt = null
+            if (
+              stopIndex > 0 &&
+              stopIndex * that.config.IMAGE_HEIGHT <= that.config.MAX_Y_OFFSET
+            ) {
+              const offsetPos = Math.abs(
+                stopIndex * that.config.IMAGE_HEIGHT -
+                  that.config.IMAGE_HEIGHT * stopAt[`reel${i}`].lineCoeff
+              )
+
+              if (offsets[`reel${i}`] >= offsetPos) {
+                that.$refs[
+                  `reel${i}`
+                ].style.transform = `translateY(-${offsetPos}px)`
+                stopAt[`reel${i}`] = null
+                stopped[`reel${i}`] = true
+                that.latestOffsets[`reel${i}`] = offsetPos
+              }
             }
           }
+        }
+
+        if (Object.values(stopped).every(v => v)) {
+          that.config.RUNNING = false
         }
         if (that.config.RUNNING) {
           requestAnimationFrame(loop)
@@ -224,11 +295,28 @@ export default {
       })()
       setTimeout(() => {
         stopAt = {
-          id: this.debugReel1.symbol,
-          lineCoeff: this.lineCoeff[this.debugReel1.line]
+          reel1: {
+            id: this.debugReel1.symbol,
+            lineCoeff: this.lineCoeff[this.debugReel1.line]
+          },
+          reel2: {
+            id: this.debugReel2.symbol,
+            lineCoeff: this.lineCoeff[this.debugReel2.line]
+          },
+          reel3: {
+            id: this.debugReel3.symbol,
+            lineCoeff: this.lineCoeff[this.debugReel3.line]
+          }
         }
       }, this.config.DURATION)
     }
   }
 }
 </script>
+
+
+<style>
+.blurred {
+  filter: blur(2px);
+}
+</style>
