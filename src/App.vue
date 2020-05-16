@@ -80,6 +80,7 @@
     <div class="flex space-x-3">
       <button
         @click="spin"
+        :disabled="config.RUNNING"
         class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
       >Spin</button>
     </div>
@@ -134,7 +135,7 @@ export default {
         IMAGE_HEIGHT: 121,
         IMAGE_WIDTH: 141,
         DURATION: 2000,
-        RUNNING: true,
+        RUNNING: false,
         MAX_Y_OFFSET: 363
       },
       symbolTypes: symbolTypes,
@@ -159,7 +160,7 @@ export default {
     this.reel1 = symbols
   },
   mounted() {
-    this.start()
+    // this.start()
   },
   computed: {
     reelDimensions() {
@@ -169,11 +170,21 @@ export default {
       }
     },
     availableDebugLines() {
-      return lineTypes.filter(l => l.name !== 'any')
+      return lineTypes.filter(l => l.id !== 'any')
+    },
+    lineCoeff() {
+      return {
+        top: 0,
+        mid: 0.5,
+        bot: 1
+      }
     }
   },
   methods: {
-    spin() {},
+    spin() {
+      this.config.RUNNING = true
+      this.start()
+    },
     start() {
       let that = this
       let stopAt = null
@@ -181,7 +192,6 @@ export default {
       ;(function loop() {
         if (stopAt) {
           const stopIndex = that.reel1.findIndex(s => s.id === stopAt.id)
-          console.log(stopIndex)
 
           if (
             stopIndex > 0 &&
@@ -189,12 +199,13 @@ export default {
           ) {
             const offsetPos = Math.abs(
               stopIndex * that.config.IMAGE_HEIGHT -
-                that.config.IMAGE_HEIGHT * 0.5
+                that.config.IMAGE_HEIGHT * stopAt.lineCoeff
             )
 
             if (offset >= offsetPos) {
               that.$refs.reel1.style.transform = `translateY(-${offsetPos}px)`
               that.config.RUNNING = false
+              stopAt = null
               return
             }
           }
@@ -214,10 +225,10 @@ export default {
       })()
       setTimeout(() => {
         stopAt = {
-          id: 'bar',
-          pos: 'top'
+          id: this.debugReel1.symbol,
+          lineCoeff: this.lineCoeff[this.debugReel1.line]
         }
-      }, 2000)
+      }, this.config.DURATION)
     }
   }
 }
