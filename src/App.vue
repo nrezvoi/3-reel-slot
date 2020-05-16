@@ -190,6 +190,15 @@ export default {
       let stopAt = null
       let offset = 0
       ;(function loop() {
+        if (offset >= that.config.MAX_Y_OFFSET) {
+          const arr = that.reel1.slice(0, 3)
+          that.$refs.reel1.style.transform = `translateY(0)`
+          that.reel1.splice(0, 3)
+          that.reel1.push(...arr)
+          offset = 0
+        }
+        that.$refs.reel1.style.transform = `translateY(-${offset}px)`
+        offset += that.config.SLOT_SPEED
         if (stopAt) {
           const stopIndex = that.reel1.findIndex(s => s.id === stopAt.id)
 
@@ -206,19 +215,9 @@ export default {
               that.$refs.reel1.style.transform = `translateY(-${offsetPos}px)`
               that.config.RUNNING = false
               stopAt = null
-              return
             }
           }
         }
-        if (offset >= that.config.MAX_Y_OFFSET) {
-          const arr = that.reel1.slice(0, 3)
-          that.$refs.reel1.style.transform = `translateY(0)`
-          that.reel1.splice(0, 3)
-          that.reel1.push(...arr)
-          offset = 0
-        }
-        that.$refs.reel1.style.transform = `translateY(-${offset}px)`
-        offset += that.config.SLOT_SPEED
         if (that.config.RUNNING) {
           requestAnimationFrame(loop)
         }
