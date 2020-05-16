@@ -66,6 +66,7 @@ export default {
       isAnimationRunning: false,
       height: 121,
       maxYOffset: 0,
+      offset: 0,
       spinningSymbols: JSON.parse(JSON.stringify(symbolTypes)),
       winnerSymbol: {
         id: symbolTypes[0].id,
@@ -121,31 +122,22 @@ export default {
       }
       this.isAnimationRunning = true
       this.$nextTick(() => {
-        requestAnimationFrame(() => {
-          this._spinReel()
-        })
+        this._spinReel()
       })
     },
     _spinReel() {
-      this.$refs.spinContainer.style.willChange = 'transform'
-      const startSpinning = () => {
-        this.$refs.spinContainer.style.transition = 'transform 0.1s linear'
-        requestAnimationFrame(() => {
-          this.$refs.spinContainer.style.transform = `translateY(-${this.maxYOffset}px)`
-        })
-      }
-      const callback = () => {
-        this.$refs.spinContainer.style.transition = null
-        requestAnimationFrame(() => {
-          this.$refs.spinContainer.style.transform = `translateY(-${0}px)`
-          requestAnimationFrame(() => {
-            startSpinning()
-          })
-        })
-      }
-      startSpinning()
-      this.$refs.spinContainer['_animCallback'] = callback
-      this.$refs.spinContainer.addEventListener('transitionend', callback)
+      const speed = 50
+      let that = this
+      ;(function animate() {
+        if (that.offset >= that.maxYOffset) {
+          that.$refs.spinContainer.style.transform = `translateY(0)`
+          that.offset = 0
+        } else {
+          that.$refs.spinContainer.style.transform = `translateY(-${that.offset}px)`
+        }
+        that.offset += speed
+        requestAnimationFrame(animate)
+      })()
     },
     stop() {
       if (!this.isAnimationRunning) {

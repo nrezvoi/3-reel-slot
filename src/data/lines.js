@@ -1,18 +1,14 @@
 export default [
     {
-        id: 1,
-        name: 'top'
+        id: 'top',
     },
     {
-        id: 2,
-        name: 'mid'
+        id: 'mid',
     },
     {
-        id: 3,
-        name: 'bot'
+        id: 'bot',
     },
     {
-        id: 4,
-        name: 'any'
+        id: 'any',
     }
 ]

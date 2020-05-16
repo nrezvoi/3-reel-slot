@@ -12,7 +12,7 @@
             v-for="(s, i) in symbolTypes"
             :key="i"
             :value="s.id"
-          >{{ s.name }}</option>
+          >{{ s.id }}</option>
         </select>
         <select
           class="block mt-2 bg-gray-700"
@@ -23,7 +23,7 @@
             v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
-          >{{ l.name }}</option>
+          >{{ l.id }}</option>
         </select>
       </div>
       <div>
@@ -37,7 +37,7 @@
             v-for="(s, i) in symbolTypes"
             :key="i"
             :value="s.id"
-          >{{ s.name }}</option>
+          >{{ s.id }}</option>
         </select>
         <select
           class="block mt-2 bg-gray-700"
@@ -48,7 +48,7 @@
             v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
-          >{{ l.name }}</option>
+          >{{ l.id }}</option>
         </select>
       </div>
       <div>
@@ -62,7 +62,7 @@
             v-for="(s, i) in symbolTypes"
             :key="i"
             :value="s.id"
-          >{{ s.name }}</option>
+          >{{ s.id }}</option>
         </select>
         <select
           class="block mt-2 bg-gray-700"
@@ -73,35 +73,41 @@
             v-for="(l, i) in availableDebugLines"
             :key="i"
             :value="l.id"
-          >{{ l.name }}</option>
+          >{{ l.id }}</option>
         </select>
       </div>
     </div>
     <div class="flex space-x-3">
       <button
-        :disabled="isRunning"
         @click="spin"
         class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
       >Spin</button>
     </div>
-    <div class="relative inline-flex mt-4 space-x-3">
-      <reel
-        ref="reel1"
-        @stop="onReelStop"
-      />
-      <reel
-        ref="reel2"
-        @stop="onReelStop"
-      />
-      <reel
-        ref="reel3"
-        @stop="onReelStop"
-      />
-      <div class="absolute flex flex-col w-full h-full justify-evenly">
-        <div class="h-px bg-yellow-400"></div>
-        <div class="h-px bg-yellow-400"></div>
-        <div class="h-px bg-yellow-400"></div>
+    <div class="relative inline-flex mt-4">
+      <div class="flex space-x-3">
+        <div
+          ref="reel1Container"
+          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+          class="overflow-hidden"
+        >
+          <div ref="reel1">
+            <img
+              v-for="(s, i) in reel1"
+              :key="i"
+              class="block"
+              :width="config.IMAGE_WIDTH"
+              :height="config.IMAGE_HEIGHT"
+              :src="s.imagePath"
+              :alt="s.name"
+            >
+          </div>
+        </div>
       </div>
+      <!-- <div class="absolute flex flex-col w-full h-full justify-evenly">
+        <div class="h-px bg-yellow-400"></div>
+        <div class="h-px bg-yellow-400"></div>
+        <div class="h-px bg-yellow-400"></div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -111,20 +117,29 @@
 import lineTypes from './data/lines'
 import symbolTypes from './data/symbols'
 
-import Reel from './components/Reel'
+// function shuffle(array) {
+//   for (let i = array.length - 1; i > 0; i--) {
+//     let j = Math.floor(Math.random() * (i + 1)) // random index from 0 to i
+//     ;[array[i], array[j]] = [array[j], array[i]]
+//   }
+// }
 
 export default {
   name: 'App',
-  components: {
-    Reel
-  },
   data() {
     return {
-      isRunning: false,
-      userBalance: 5000,
-      isDebug: true,
+      config: {
+        SLOT_SPEED: 20,
+        SYMBOL_COUNT: 5,
+        IMAGE_HEIGHT: 121,
+        IMAGE_WIDTH: 141,
+        DURATION: 2000,
+        RUNNING: true,
+        MAX_Y_OFFSET: 363
+      },
       symbolTypes: symbolTypes,
       lineTypes: lineTypes,
+      reel1: [],
       debugReel1: {
         symbol: symbolTypes[0].id,
         line: lineTypes[0].id
@@ -139,46 +154,70 @@ export default {
       }
     }
   },
+  created() {
+    const symbols = [...symbolTypes]
+    this.reel1 = symbols
+  },
+  mounted() {
+    this.start()
+  },
   computed: {
+    reelDimensions() {
+      return {
+        width: this.config.IMAGE_WIDTH,
+        height: this.config.IMAGE_HEIGHT * 2
+      }
+    },
     availableDebugLines() {
       return lineTypes.filter(l => l.name !== 'any')
     }
   },
   methods: {
-    spin() {
-      this.isRunning = true
-      if (this.isDebug) {
-        const reel1Winner = {
-          symbolId: this.debugReel1.symbol,
-          line: { ...lineTypes.find(l => l.id === this.debugReel1.line) }
-        }
-        const reel2Winner = {
-          symbolId: this.debugReel2.symbol,
-          line: { ...lineTypes.find(l => l.id === this.debugReel2.line) }
-        }
-        const reel3Winner = {
-          symbolId: this.debugReel3.symbol,
-          line: { ...lineTypes.find(l => l.id === this.debugReel3.line) }
-        }
-        this.$refs.reel1.start(reel1Winner)
-        this.$refs.reel2.start(reel2Winner)
-        this.$refs.reel3.start(reel3Winner)
+    spin() {},
+    start() {
+      let that = this
+      let stopAt = null
+      let offset = 0
+      ;(function loop() {
+        if (stopAt) {
+          const stopIndex = that.reel1.findIndex(s => s.id === stopAt.id)
+          console.log(stopIndex)
 
-        setTimeout(() => {
-          this.$refs.reel1.stop(reel1Winner)
-          setTimeout(() => {
-            this.$refs.reel2.stop(reel1Winner)
-            setTimeout(() => {
-              this.$refs.reel3.stop(reel1Winner)
-              this.isRunning = false
-            }, 500)
-          }, 500)
-        }, 2000)
-      }
-    },
-    onReelStop() {
-      this.isRunning = false
-      console.log('reel stoppped!')
+          if (
+            stopIndex > 0 &&
+            stopIndex * that.config.IMAGE_HEIGHT <= that.config.MAX_Y_OFFSET
+          ) {
+            const offsetPos = Math.abs(
+              stopIndex * that.config.IMAGE_HEIGHT -
+                that.config.IMAGE_HEIGHT * 0.5
+            )
+
+            if (offset >= offsetPos) {
+              that.$refs.reel1.style.transform = `translateY(-${offsetPos}px)`
+              that.config.RUNNING = false
+              return
+            }
+          }
+        }
+        if (offset >= that.config.MAX_Y_OFFSET) {
+          const arr = that.reel1.slice(0, 3)
+          that.$refs.reel1.style.transform = `translateY(0)`
+          that.reel1.splice(0, 3)
+          that.reel1.push(...arr)
+          offset = 0
+        }
+        that.$refs.reel1.style.transform = `translateY(-${offset}px)`
+        offset += that.config.SLOT_SPEED
+        if (that.config.RUNNING) {
+          requestAnimationFrame(loop)
+        }
+      })()
+      setTimeout(() => {
+        stopAt = {
+          id: 'bar',
+          pos: 'top'
+        }
+      }, 2000)
     }
   }
 }
