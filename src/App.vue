@@ -88,14 +88,13 @@
       <div class="flex space-x-3">
         <div
           :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="overflow-hidden"
+          class="relative z-10 overflow-hidden"
         >
           <div ref="reel1">
             <img
               v-for="(s, i) in reel1"
               :key="i"
               class="block"
-              :class="{ 'blurred': config.RUNNING }"
               :width="config.IMAGE_WIDTH"
               :height="config.IMAGE_HEIGHT"
               :src="s.imagePath"
@@ -105,14 +104,13 @@
         </div>
         <div
           :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="overflow-hidden"
+          class="relative z-10 overflow-hidden"
         >
           <div ref="reel2">
             <img
               v-for="(s, i) in reel2"
               :key="i"
               class="block"
-              :class="{ 'blurred': config.RUNNING }"
               :width="config.IMAGE_WIDTH"
               :height="config.IMAGE_HEIGHT"
               :src="s.imagePath"
@@ -122,14 +120,13 @@
         </div>
         <div
           :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="overflow-hidden"
+          class="relative z-10 overflow-hidden"
         >
           <div ref="reel3">
             <img
               v-for="(s, i) in reel3"
               :key="i"
               class="block"
-              :class="{ 'blurred': config.RUNNING }"
               :width="config.IMAGE_WIDTH"
               :height="config.IMAGE_HEIGHT"
               :src="s.imagePath"
@@ -138,17 +135,17 @@
           </div>
         </div>
       </div>
-      <!-- <div class="absolute flex flex-col w-full h-full justify-evenly">
-        <div class="h-px bg-yellow-400"></div>
-        <div class="h-px bg-yellow-400"></div>
-        <div class="h-px bg-yellow-400"></div>
-      </div> -->
+      <div class="absolute flex flex-col w-full h-full justify-evenly">
+        <div class="h-px bg-green-400"></div>
+        <div class="h-px bg-green-400"></div>
+        <div class="h-px bg-green-400"></div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-// import payTable from './data/payTable'
+import payTable from './data/payTable'
 import lineTypes from './data/lines'
 import symbolTypes from './data/symbols'
 
@@ -157,6 +154,7 @@ import symbolTypes from './data/symbols'
 //     let j = Math.floor(Math.random() * (i + 1)) // random index from 0 to i
 //     ;[array[i], array[j]] = [array[j], array[i]]
 //   }
+//   return array
 // }
 
 export default {
@@ -164,11 +162,12 @@ export default {
   data() {
     return {
       config: {
-        SLOT_SPEED: 60,
+        SLOT_SPEED: 40,
         SYMBOL_COUNT: 5,
         IMAGE_HEIGHT: 121,
         IMAGE_WIDTH: 141,
         DURATION: 2000,
+        DELAY: 500,
         RUNNING: false,
         MAX_Y_OFFSET: 363
       },
@@ -244,6 +243,11 @@ export default {
         reel2: false,
         reel3: false
       }
+      let visibleOnLines = {
+        reel1: [],
+        reel2: [],
+        reel3: []
+      }
       ;(function loop() {
         for (let i = 1; i <= 3; i++) {
           if (stopped[`reel${i}`]) {
@@ -271,10 +275,29 @@ export default {
             ) {
               const offsetPos = Math.abs(
                 stopIndex * that.config.IMAGE_HEIGHT -
-                  that.config.IMAGE_HEIGHT * stopAt[`reel${i}`].lineCoeff
+                  that.config.IMAGE_HEIGHT * stopAt[`reel${i}`].line.coeff
               )
 
               if (offsets[`reel${i}`] >= offsetPos) {
+                if (stopAt[`reel${i}`].line.id === 'mid') {
+                  visibleOnLines[`reel${i}`].push(
+                    that[`reel${i}`][stopIndex].id
+                  )
+                } else if (stopAt[`reel${i}`].line.id === 'top') {
+                  visibleOnLines[`reel${i}`].push(
+                    that[`reel${i}`][stopIndex].id
+                  )
+                  visibleOnLines[`reel${i}`].push(
+                    that[`reel${i}`][stopIndex + 1].id
+                  )
+                } else {
+                  visibleOnLines[`reel${i}`].push(
+                    that[`reel${i}`][stopIndex - 1].id
+                  )
+                  visibleOnLines[`reel${i}`].push(
+                    that[`reel${i}`][stopIndex].id
+                  )
+                }
                 that.$refs[
                   `reel${i}`
                 ].style.transform = `translateY(-${offsetPos}px)`
@@ -288,35 +311,99 @@ export default {
 
         if (Object.values(stopped).every(v => v)) {
           that.config.RUNNING = false
+          that.determineWinners(visibleOnLines)
         }
         if (that.config.RUNNING) {
           requestAnimationFrame(loop)
         }
       })()
       setTimeout(() => {
-        stopAt = {
-          reel1: {
-            id: this.debugReel1.symbol,
-            lineCoeff: this.lineCoeff[this.debugReel1.line]
-          },
-          reel2: {
-            id: this.debugReel2.symbol,
-            lineCoeff: this.lineCoeff[this.debugReel2.line]
-          },
-          reel3: {
-            id: this.debugReel3.symbol,
-            lineCoeff: this.lineCoeff[this.debugReel3.line]
+        stopAt.reel1 = {
+          id: this.debugReel1.symbol,
+          line: {
+            id: this.debugReel1.line,
+            coeff: this.lineCoeff[this.debugReel1.line]
           }
         }
+        setTimeout(() => {
+          stopAt.reel2 = {
+            id: this.debugReel2.symbol,
+            line: {
+              id: this.debugReel2.line,
+              coeff: this.lineCoeff[this.debugReel2.line]
+            }
+          }
+          setTimeout(() => {
+            stopAt.reel3 = {
+              id: this.debugReel3.symbol,
+              line: {
+                id: this.debugReel3.line,
+                coeff: this.lineCoeff[this.debugReel3.line]
+              }
+            }
+          }, this.config.DELAY)
+        }, this.config.DELAY)
       }, this.config.DURATION)
+    },
+    determineWinners(visibleOnLines) {
+      const lines = {
+        top: [],
+        mid: [],
+        bot: []
+      }
+      for (let i = 1; i <= 3; i++) {
+        const reel = visibleOnLines[`reel${i}`]
+        if (reel.length === 1) {
+          lines.top.push('x')
+          lines.mid.push(reel[0])
+          lines.bot.push('x')
+        } else {
+          lines.top.push(reel[0])
+          lines.mid.push('x')
+          lines.bot.push(reel[1])
+        }
+      }
+
+      const winLines = []
+
+      Object.keys(lines).forEach(line => {
+        payTable.forEach(type => {
+          if (!lines[line].added) {
+            if (type.line !== 'any') {
+              if (
+                line === type.line &&
+                lines[line].toString() === type.symbols.toString()
+              ) {
+                winLines.push({
+                  line: line,
+                  type: { ...type }
+                })
+                lines[line].added = true
+              }
+            } else {
+              if (!type.combination) {
+                if (lines[line].toString() === type.symbols.toString()) {
+                  winLines.push({
+                    line: line,
+                    type: { ...type }
+                  })
+                  lines[line].added = true
+                }
+              } else {
+                if (lines[line].every(l => type.symbols.includes(l))) {
+                  winLines.push({
+                    line: line,
+                    type: { ...type }
+                  })
+                  lines[line].added = true
+                }
+              }
+            }
+          }
+        })
+      })
+      console.log(winLines)
     }
   }
 }
 </script>
-
-
-<style>
-.blurred {
-  filter: blur(2px);
-}
-</style>
