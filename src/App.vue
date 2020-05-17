@@ -89,11 +89,20 @@
         class="absolute flex flex-col w-full justify-evenly"
         style="height: 234px; top: calc(50% - 117px)"
       >
-        <div class="h-1 bg-green-400"></div>
-        <div class="h-1 bg-green-400"></div>
-        <div class="h-1 bg-green-400"></div>
+        <div
+          class="h-1"
+          :class="winLineStyle('top')"
+        ></div>
+        <div
+          class="h-1"
+          :class="winLineStyle('mid')"
+        ></div>
+        <div
+          class="h-1"
+          :class="winLineStyle('bot')"
+        ></div>
       </div>
-      <div class="flex p-4 space-x-3 border-2 border-pink-500 rounded">
+      <div class="flex p-4 space-x-3 bg-gray-900 border-2 border-pink-500 rounded">
         <div
           class="relative bg-gray-300 border-2 border-blue-500 rounded"
           style="border-width: 4px"
@@ -237,6 +246,11 @@ export default {
       },
       symbolTypes: symbolTypes,
       lineTypes: lineTypes,
+      winLines: {
+        top: false,
+        mid: false,
+        bot: false
+      },
       reel1: [],
       reel2: [],
       reel3: [],
@@ -293,9 +307,25 @@ export default {
     }
   },
   methods: {
+    winLineStyle(line) {
+      if (this.winLines[line]) {
+        return ['z-30', 'bg-yellow-600']
+      } else {
+        return ['bg-green-400']
+      }
+    },
     spin() {
+      this.reset()
       this.config.RUNNING = true
       this.start()
+    },
+    reset() {
+      this.rulesTable.forEach(rule => {
+        rule.isWin = false
+      })
+      Object.keys(this.winLines).forEach(k => {
+        this.winLines[k] = false
+      })
     },
     start() {
       let that = this
@@ -473,7 +503,12 @@ export default {
           }
         })
       })
-      console.log(winLines)
+
+      for (let win of winLines) {
+        this.winLines[win.line] = true
+        const rule = this.rulesTable.find(r => r.id === win.type.id)
+        rule.isWin = true
+      }
     }
   }
 }
