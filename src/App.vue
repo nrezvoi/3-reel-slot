@@ -141,6 +141,47 @@
         <div class="h-px bg-green-400"></div>
       </div>
     </div>
+    <div class="mt-4">
+      <div>
+        <table class="text-sm">
+          <thead>
+            <tr>
+              <td class="px-2 py-2"></td>
+              <td class="px-2 py-2 font-bold">Line</td>
+              <td class="px-2 py-2 font-bold">Type</td>
+              <td class="px-2 py-2 font-bold">Payout</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(type, i) in rulesTable"
+              :key="i"
+              :class="{'blinking': type.isWin}"
+            >
+              <td class="px-2 py-2">
+                <div class="flex space-x-2">
+                  <img
+                    width="50"
+                    height="43"
+                    v-for="(imagePath, k) in type.symbols"
+                    :key="k"
+                    :src="imagePath"
+                    alt="symbol"
+                  >
+                </div>
+              </td>
+              <td class="px-2 py-2">{{ type.line }}</td>
+              <td class="px-2 py-2">
+                <template v-if="!type.combination">Match</template>
+                <template v-else>Combination</template>
+              </td>
+              <td class="px-2 py-2">{{ type.payout }}</td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -192,7 +233,14 @@ export default {
       debugReel3: {
         symbol: symbolTypes[0].id,
         line: lineTypes[0].id
-      }
+      },
+      rulesTable: JSON.parse(JSON.stringify(payTable)).map(type => {
+        type.isWin = false
+        type.symbols = type.symbols.map(
+          s => symbolTypes.find(t => s === t.id).imagePath
+        )
+        return type
+      })
     }
   },
   created() {
@@ -407,3 +455,15 @@ export default {
   }
 }
 </script>
+
+<style>
+.blinking {
+  animation: blink-animation 1s step-start infinite;
+}
+
+@keyframes blink-animation {
+  50% {
+    background: #d69e2e;
+  }
+}
+</style>
