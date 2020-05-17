@@ -85,60 +85,84 @@
       >Spin</button>
     </div>
     <div class="relative inline-flex mt-4">
-      <div class="flex space-x-3">
-        <div
-          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="relative z-10 overflow-hidden"
-        >
-          <div ref="reel1">
-            <img
-              v-for="(s, i) in reel1"
-              :key="i"
-              class="block"
-              :width="config.IMAGE_WIDTH"
-              :height="config.IMAGE_HEIGHT"
-              :src="s.imagePath"
-              :alt="s.name"
-            >
-          </div>
-        </div>
-        <div
-          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="relative z-10 overflow-hidden"
-        >
-          <div ref="reel2">
-            <img
-              v-for="(s, i) in reel2"
-              :key="i"
-              class="block"
-              :width="config.IMAGE_WIDTH"
-              :height="config.IMAGE_HEIGHT"
-              :src="s.imagePath"
-              :alt="s.name"
-            >
-          </div>
-        </div>
-        <div
-          :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-          class="relative z-10 overflow-hidden"
-        >
-          <div ref="reel3">
-            <img
-              v-for="(s, i) in reel3"
-              :key="i"
-              class="block"
-              :width="config.IMAGE_WIDTH"
-              :height="config.IMAGE_HEIGHT"
-              :src="s.imagePath"
-              :alt="s.name"
-            >
-          </div>
-        </div>
+      <div
+        class="absolute flex flex-col w-full justify-evenly"
+        style="height: 234px; top: calc(50% - 117px)"
+      >
+        <div class="h-1 bg-green-400"></div>
+        <div class="h-1 bg-green-400"></div>
+        <div class="h-1 bg-green-400"></div>
       </div>
-      <div class="absolute flex flex-col w-full h-full justify-evenly">
-        <div class="h-px bg-green-400"></div>
-        <div class="h-px bg-green-400"></div>
-        <div class="h-px bg-green-400"></div>
+      <div class="flex p-4 space-x-3 border-2 border-pink-500 rounded">
+        <div
+          class="relative bg-gray-300 border-2 border-blue-500 rounded"
+          style="border-width: 4px"
+        >
+          <div
+            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+            class="relative z-10 overflow-hidden"
+          >
+            <div ref="reel1">
+              <img
+                v-for="(s, i) in reel1"
+                :key="i"
+                class="block"
+                :width="config.IMAGE_WIDTH"
+                :height="config.IMAGE_HEIGHT"
+                :src="s.imagePath"
+                :alt="s.name"
+              >
+            </div>
+          </div>
+          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+        </div>
+        <div
+          class="relative bg-gray-300 border-2 border-blue-500 rounded"
+          style="border-width: 4px"
+        >
+          <div
+            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+            class="relative z-10 overflow-hidden"
+          >
+            <div ref="reel2">
+              <img
+                v-for="(s, i) in reel2"
+                :key="i"
+                class="block"
+                :width="config.IMAGE_WIDTH"
+                :height="config.IMAGE_HEIGHT"
+                :src="s.imagePath"
+                :alt="s.name"
+              >
+            </div>
+          </div>
+          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+        </div>
+        <div
+          class="relative bg-gray-300 border-2 border-blue-500 rounded"
+          style="border-width: 4px"
+        >
+          <div
+            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+            class="relative z-10 overflow-hidden"
+          >
+            <div ref="reel3">
+              <img
+                v-for="(s, i) in reel3"
+                :key="i"
+                class="block"
+                :width="config.IMAGE_WIDTH"
+                :height="config.IMAGE_HEIGHT"
+                :src="s.imagePath"
+                :alt="s.name"
+              >
+            </div>
+          </div>
+          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+        </div>
       </div>
     </div>
     <div class="mt-4">
@@ -176,7 +200,6 @@
                 <template v-else>Combination</template>
               </td>
               <td class="px-2 py-2">{{ type.payout }}</td>
-
             </tr>
           </tbody>
         </table>
@@ -465,5 +488,20 @@ export default {
   50% {
     background: #d69e2e;
   }
+}
+
+.gradient-to-bottom {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+.gradient-to-top {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 </style>
