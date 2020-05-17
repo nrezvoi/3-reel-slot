@@ -1,180 +1,100 @@
 <template>
-  <div class="min-h-screen text-gray-200 bg-gray-800">
-    <div class="flex space-x-3">
-      <div>
-        <div class="font-bold">Reel 1</div>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel1-symbol"
-          v-model="debugReel1.symbol"
-        >
-          <option
-            v-for="(s, i) in symbolTypes"
-            :key="i"
-            :value="s.id"
-          >{{ s.id }}</option>
-        </select>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel1-line"
-          v-model="debugReel1.line"
-        >
-          <option
-            v-for="(l, i) in availableDebugLines"
-            :key="i"
-            :value="l.id"
-          >{{ l.id }}</option>
-        </select>
-      </div>
-      <div>
-        <div class="font-bold">Reel 2</div>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel2-symbol"
-          v-model="debugReel2.symbol"
-        >
-          <option
-            v-for="(s, i) in symbolTypes"
-            :key="i"
-            :value="s.id"
-          >{{ s.id }}</option>
-        </select>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel2-line"
-          v-model="debugReel2.line"
-        >
-          <option
-            v-for="(l, i) in availableDebugLines"
-            :key="i"
-            :value="l.id"
-          >{{ l.id }}</option>
-        </select>
-      </div>
-      <div>
-        <div class="font-bold">Reel 3</div>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel2-symbol"
-          v-model="debugReel3.symbol"
-        >
-          <option
-            v-for="(s, i) in symbolTypes"
-            :key="i"
-            :value="s.id"
-          >{{ s.id }}</option>
-        </select>
-        <select
-          class="block mt-2 bg-gray-700"
-          id="debugReel3-line"
-          v-model="debugReel3.line"
-        >
-          <option
-            v-for="(l, i) in availableDebugLines"
-            :key="i"
-            :value="l.id"
-          >{{ l.id }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="flex space-x-3">
-      <button
-        @click="spin"
-        :disabled="config.RUNNING"
-        class="inline-block p-2 mt-4 border border-gray-300 rounded cursor-pointer"
-      >Spin</button>
-    </div>
-    <div class="relative inline-flex mt-4">
-      <div
-        class="absolute flex flex-col w-full justify-evenly"
-        style="height: 234px; top: calc(50% - 117px)"
-      >
+  <div class="min-h-screen p-4 text-gray-200 bg-gray-800">
+    <div class="flex justify-center">
+      <div class="relative">
+
         <div
-          class="h-1"
-          :class="winLineStyle('top')"
-        ></div>
-        <div
-          class="h-1"
-          :class="winLineStyle('mid')"
-        ></div>
-        <div
-          class="h-1"
-          :class="winLineStyle('bot')"
-        ></div>
-      </div>
-      <div class="flex p-4 space-x-3 bg-gray-900 border-2 border-pink-500 rounded">
-        <div
-          class="relative bg-gray-300 border-2 border-blue-500 rounded"
-          style="border-width: 4px"
+          class="absolute flex flex-col w-full justify-evenly"
+          style="height: 234px; top: calc(50% - 117px)"
         >
           <div
-            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-            class="relative z-10 overflow-hidden"
-          >
-            <div ref="reel1">
-              <img
-                v-for="(s, i) in reel1"
-                :key="i"
-                class="block"
-                :width="config.IMAGE_WIDTH"
-                :height="config.IMAGE_HEIGHT"
-                :src="s.imagePath"
-                :alt="s.name"
-              >
-            </div>
-          </div>
-          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
-          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
-        </div>
-        <div
-          class="relative bg-gray-300 border-2 border-blue-500 rounded"
-          style="border-width: 4px"
-        >
+            class="h-1"
+            :class="winLineStyle('top')"
+          ></div>
           <div
-            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-            class="relative z-10 overflow-hidden"
-          >
-            <div ref="reel2">
-              <img
-                v-for="(s, i) in reel2"
-                :key="i"
-                class="block"
-                :width="config.IMAGE_WIDTH"
-                :height="config.IMAGE_HEIGHT"
-                :src="s.imagePath"
-                :alt="s.name"
-              >
-            </div>
-          </div>
-          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
-          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
-        </div>
-        <div
-          class="relative bg-gray-300 border-2 border-blue-500 rounded"
-          style="border-width: 4px"
-        >
+            class="h-1"
+            :class="winLineStyle('mid')"
+          ></div>
           <div
-            :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-            class="relative z-10 overflow-hidden"
-          >
-            <div ref="reel3">
-              <img
-                v-for="(s, i) in reel3"
-                :key="i"
-                class="block"
-                :width="config.IMAGE_WIDTH"
-                :height="config.IMAGE_HEIGHT"
-                :src="s.imagePath"
-                :alt="s.name"
-              >
-            </div>
-          </div>
-          <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
-          <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+            class="h-1"
+            :class="winLineStyle('bot')"
+          ></div>
         </div>
+        <div class="flex p-4 space-x-3 bg-gray-900 border-2 border-pink-500 rounded">
+          <div
+            class="relative bg-gray-300 border-2 border-blue-500 rounded"
+            style="border-width: 4px"
+          >
+            <div
+              :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+              class="relative z-10 overflow-hidden"
+            >
+              <div ref="reel1">
+                <img
+                  v-for="(s, i) in reel1"
+                  :key="i"
+                  class="block"
+                  :width="config.IMAGE_WIDTH"
+                  :height="config.IMAGE_HEIGHT"
+                  :src="s.imagePath"
+                  :alt="s.name"
+                >
+              </div>
+            </div>
+            <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+            <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+          </div>
+          <div
+            class="relative bg-gray-300 border-2 border-blue-500 rounded"
+            style="border-width: 4px"
+          >
+            <div
+              :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+              class="relative z-10 overflow-hidden"
+            >
+              <div ref="reel2">
+                <img
+                  v-for="(s, i) in reel2"
+                  :key="i"
+                  class="block"
+                  :width="config.IMAGE_WIDTH"
+                  :height="config.IMAGE_HEIGHT"
+                  :src="s.imagePath"
+                  :alt="s.name"
+                >
+              </div>
+            </div>
+            <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+            <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+          </div>
+          <div
+            class="relative bg-gray-300 border-2 border-blue-500 rounded"
+            style="border-width: 4px"
+          >
+            <div
+              :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
+              class="relative z-10 overflow-hidden"
+            >
+              <div ref="reel3">
+                <img
+                  v-for="(s, i) in reel3"
+                  :key="i"
+                  class="block"
+                  :width="config.IMAGE_WIDTH"
+                  :height="config.IMAGE_HEIGHT"
+                  :src="s.imagePath"
+                  :alt="s.name"
+                >
+              </div>
+            </div>
+            <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
+            <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
+          </div>
+        </div>
+
       </div>
     </div>
-    <div class="mt-4">
+    <div class="flex justify-center mt-4 space-x-8">
       <div>
         <table class="text-sm">
           <thead>
@@ -213,6 +133,117 @@
           </tbody>
         </table>
       </div>
+      <div class="space-y-4">
+        <div>
+          <div>
+            Current balance:
+            <span
+              v-if="!config.IS_DEBUG"
+              class="font-bold text-yellow-400"
+            >{{ config.PLAYER_BALANCE }}</span>
+            <input
+              v-else
+              type="number"
+              v-model="config.PLAYER_BALANCE"
+              class="w-16 bg-gray-700"
+            >
+          </div>
+        </div>
+        <button
+          @click="spin"
+          :disabled="config.RUNNING"
+          class="inline-block p-2 border border-gray-300 rounded cursor-pointer"
+        >Spin</button>
+        <div class="space-x-2">
+          <label for="debug">Debug mode</label>
+          <input
+            type="checkbox"
+            v-model="config.IS_DEBUG"
+            name=""
+            id="debug"
+          >
+        </div>
+        <div
+          v-if="config.IS_DEBUG"
+          class="flex space-x-3"
+        >
+          <div>
+            <div class="font-bold">Reel 1</div>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel1-symbol"
+              v-model="debugReel1.symbol"
+            >
+              <option
+                v-for="(s, i) in symbolTypes"
+                :key="i"
+                :value="s.id"
+              >{{ s.id }}</option>
+            </select>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel1-line"
+              v-model="debugReel1.line"
+            >
+              <option
+                v-for="(l, i) in availableLines"
+                :key="i"
+                :value="l.id"
+              >{{ l.id }}</option>
+            </select>
+          </div>
+          <div>
+            <div class="font-bold">Reel 2</div>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel2-symbol"
+              v-model="debugReel2.symbol"
+            >
+              <option
+                v-for="(s, i) in symbolTypes"
+                :key="i"
+                :value="s.id"
+              >{{ s.id }}</option>
+            </select>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel2-line"
+              v-model="debugReel2.line"
+            >
+              <option
+                v-for="(l, i) in availableLines"
+                :key="i"
+                :value="l.id"
+              >{{ l.id }}</option>
+            </select>
+          </div>
+          <div>
+            <div class="font-bold">Reel 3</div>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel2-symbol"
+              v-model="debugReel3.symbol"
+            >
+              <option
+                v-for="(s, i) in symbolTypes"
+                :key="i"
+                :value="s.id"
+              >{{ s.id }}</option>
+            </select>
+            <select
+              class="block mt-2 bg-gray-700"
+              id="debugReel3-line"
+              v-model="debugReel3.line"
+            >
+              <option
+                v-for="(l, i) in availableLines"
+                :key="i"
+                :value="l.id"
+              >{{ l.id }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -222,19 +253,12 @@ import payTable from './data/payTable'
 import lineTypes from './data/lines'
 import symbolTypes from './data/symbols'
 
-// function shuffle(array) {
-//   for (let i = array.length - 1; i > 0; i--) {
-//     let j = Math.floor(Math.random() * (i + 1)) // random index from 0 to i
-//     ;[array[i], array[j]] = [array[j], array[i]]
-//   }
-//   return array
-// }
-
 export default {
   name: 'App',
   data() {
     return {
       config: {
+        IS_DEBUG: false,
         SLOT_SPEED: 40,
         SYMBOL_COUNT: 5,
         IMAGE_HEIGHT: 121,
@@ -242,7 +266,8 @@ export default {
         DURATION: 2000,
         DELAY: 500,
         RUNNING: false,
-        MAX_Y_OFFSET: 363
+        MAX_Y_OFFSET: 363,
+        PLAYER_BALANCE: 10
       },
       symbolTypes: symbolTypes,
       lineTypes: lineTypes,
@@ -295,7 +320,7 @@ export default {
         height: this.config.IMAGE_HEIGHT * 2
       }
     },
-    availableDebugLines() {
+    availableLines() {
       return lineTypes.filter(l => l.id !== 'any')
     },
     lineCoeff() {
@@ -316,8 +341,13 @@ export default {
     },
     spin() {
       this.reset()
-      this.config.RUNNING = true
-      this.start()
+      if (this.config.PLAYER_BALANCE <= 0) {
+        alert('Insufficient funds!')
+      } else {
+        this.config.PLAYER_BALANCE -= 1
+        this.config.RUNNING = true
+        this.start()
+      }
     },
     reset() {
       this.rulesTable.forEach(rule => {
@@ -418,30 +448,49 @@ export default {
           requestAnimationFrame(loop)
         }
       })()
-      setTimeout(() => {
-        stopAt.reel1 = {
-          id: this.debugReel1.symbol,
-          line: {
-            id: this.debugReel1.line,
-            coeff: this.lineCoeff[this.debugReel1.line]
+
+      let winners = {
+        reel1: null,
+        reel2: null,
+        reel3: null
+      }
+
+      for (let i = 1; i <= 3; i++) {
+        if (!this.config.IS_DEBUG) {
+          const randomSymbolId =
+            symbolTypes[Math.floor(Math.random() * symbolTypes.length)].id
+          const randomLine = this.availableLines[
+            Math.floor(Math.random() * this.availableLines.length)
+          ].id
+          const lineCoeff = this.lineCoeff[randomLine]
+
+          winners[`reel${i}`] = {
+            id: randomSymbolId,
+            line: {
+              id: randomLine,
+              coeff: lineCoeff
+            }
+          }
+        } else {
+          const symbolId = this[`debugReel${i}`].symbol
+          const lineId = this[`debugReel${i}`].line
+          const lineCoeff = this.lineCoeff[lineId]
+          winners[`reel${i}`] = {
+            id: symbolId,
+            line: {
+              id: lineId,
+              coeff: lineCoeff
+            }
           }
         }
+      }
+
+      setTimeout(() => {
+        stopAt.reel1 = winners.reel1
         setTimeout(() => {
-          stopAt.reel2 = {
-            id: this.debugReel2.symbol,
-            line: {
-              id: this.debugReel2.line,
-              coeff: this.lineCoeff[this.debugReel2.line]
-            }
-          }
+          stopAt.reel2 = winners.reel2
           setTimeout(() => {
-            stopAt.reel3 = {
-              id: this.debugReel3.symbol,
-              line: {
-                id: this.debugReel3.line,
-                coeff: this.lineCoeff[this.debugReel3.line]
-              }
-            }
+            stopAt.reel3 = winners.reel3
           }, this.config.DELAY)
         }, this.config.DELAY)
       }, this.config.DURATION)
@@ -508,6 +557,7 @@ export default {
         this.winLines[win.line] = true
         const rule = this.rulesTable.find(r => r.id === win.type.id)
         rule.isWin = true
+        this.config.PLAYER_BALANCE += rule.payout
       }
     }
   }
