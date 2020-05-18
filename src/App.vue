@@ -1,6 +1,29 @@
 <template>
-  <div class="min-h-screen p-4 text-gray-200 bg-gray-800">
-    <div class="flex justify-center">
+  <div class="min-h-screen p-4 text-gray-200">
+    <div class="grid justify-center grid-flow-col grid-rows-3">
+      <div
+        v-for="(type, i) in rulesTable"
+        :key="i"
+        class="grid items-center gap-2 text-sm leading-none"
+        style="grid-template-columns: 120px 85px 60px 85px"
+        :class="{'blinking': type.isWin}"
+      >
+        <div class="flex">
+          <img
+            v-for="(imagePath, m) in type.symbols"
+            :src="imagePath"
+            :key="m"
+            alt="symbol"
+            width="40"
+            height="34"
+          >
+        </div>
+        <div>{{ type.combination ? 'Combination' : 'Match' }}</div>
+        <div>{{ type.line }} line</div>
+        <div class="font-bold text-center">{{ type.payout }}</div>
+      </div>
+    </div>
+    <div class="flex justify-center mt-8">
       <div class="relative">
 
         <div
@@ -95,44 +118,7 @@
       </div>
     </div>
     <div class="flex justify-center mt-4 space-x-8">
-      <div>
-        <table class="text-sm">
-          <thead>
-            <tr>
-              <td class="px-2 py-2"></td>
-              <td class="px-2 py-2 font-bold">Line</td>
-              <td class="px-2 py-2 font-bold">Type</td>
-              <td class="px-2 py-2 font-bold">Payout</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(type, i) in rulesTable"
-              :key="i"
-              :class="{'blinking': type.isWin}"
-            >
-              <td class="px-2 py-2">
-                <div class="flex space-x-2">
-                  <img
-                    width="50"
-                    height="43"
-                    v-for="(imagePath, k) in type.symbols"
-                    :key="k"
-                    :src="imagePath"
-                    alt="symbol"
-                  >
-                </div>
-              </td>
-              <td class="px-2 py-2">{{ type.line }}</td>
-              <td class="px-2 py-2">
-                <template v-if="!type.combination">Match</template>
-                <template v-else>Combination</template>
-              </td>
-              <td class="px-2 py-2">{{ type.payout }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+
       <div class="space-y-4">
         <div>
           <div>
