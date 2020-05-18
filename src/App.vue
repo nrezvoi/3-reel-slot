@@ -1,31 +1,8 @@
 <template>
   <div class="container min-h-screen p-4 mx-auto text-gray-200">
-    <div class="grid justify-center grid-flow-col grid-rows-3">
-      <div
-        v-for="(type, i) in rulesTable"
-        :key="i"
-        class="grid items-center gap-2 text-sm leading-none"
-        style="grid-template-columns: 120px 85px 60px 85px"
-        :class="{'blinking': type.isWin}"
-      >
-        <div class="flex">
-          <img
-            v-for="(imagePath, m) in type.symbols"
-            :src="imagePath"
-            :key="m"
-            alt="symbol"
-            width="40"
-            height="34"
-          >
-        </div>
-        <div>{{ type.combination ? 'Combination' : 'Match' }}</div>
-        <div>{{ type.line }} line</div>
-        <div class="font-bold text-center">{{ type.payout }}</div>
-      </div>
-    </div>
+    <rules-table :data="rulesTable" />
     <div class="flex justify-center mt-8">
       <div class="relative">
-
         <div
           class="absolute flex flex-col w-full justify-evenly"
           style="height: 234px; top: calc(50% - 117px)"
@@ -124,8 +101,8 @@
             Balance:
             <input
               type="number"
-              v-model="config.PLAYER_BALANCE"
-              :disabled="config.RUNNING"
+              v-model="balance"
+              :disabled="isRunning"
               class="w-16 ml-4 text-yellow-400 bg-gray-700"
               min="1"
               max="5000"
@@ -135,21 +112,21 @@
         </div>
         <button
           @click="spin"
-          :disabled="config.RUNNING"
+          :disabled="isRunning"
           class="inline-block p-2 border-2 border-gray-300 rounded cursor-pointer"
-          :class="{'cursor-not-allowed': config.RUNNING}"
+          :class="{'cursor-not-allowed': isRunning}"
         >Spin</button>
         <div class="space-x-2">
           <label for="debug">Fixed mode</label>
           <input
             type="checkbox"
-            v-model="config.IS_FIXED"
+            v-model="isFixed"
             id="debug"
-            :disabled="config.RUNNING"
+            :disabled="isRunning"
           >
         </div>
         <div
-          v-if="config.IS_FIXED"
+          v-if="isFixed"
           class="flex space-x-3"
         >
           <div>
@@ -238,24 +215,27 @@ import payTable from './data/payTable'
 import lineTypes from './data/lines'
 import symbolTypes from './data/symbols'
 
+import RulesTable from './components/RulesTable'
+
 export default {
   name: 'App',
+  components: {
+    RulesTable
+  },
   data() {
     return {
       config: {
-        IS_FIXED: false,
         SLOT_SPEED: 40,
-        SYMBOL_COUNT: 5,
         IMAGE_HEIGHT: 121,
         IMAGE_WIDTH: 141,
         DURATION: 2000,
         DELAY: 500,
-        RUNNING: false,
-        MAX_Y_OFFSET: 363,
-        PLAYER_BALANCE: 10
+        MAX_Y_OFFSET: 363
       },
+      isFixed: false,
+      balance: 10,
+      isRunning: false,
       symbolTypes: symbolTypes,
-      lineTypes: lineTypes,
       winLines: {
         top: false,
         mid: false,
@@ -295,9 +275,6 @@ export default {
     this.reel2 = [...symbolTypes]
     this.reel3 = [...symbolTypes]
   },
-  mounted() {
-    // this.start()
-  },
   computed: {
     reelDimensions() {
       return {
@@ -326,11 +303,11 @@ export default {
     },
     spin() {
       this.reset()
-      if (this.config.PLAYER_BALANCE <= 0) {
+      if (this.balance <= 0) {
         alert('Insufficient funds!')
       } else {
-        this.config.PLAYER_BALANCE -= 1
-        this.config.RUNNING = true
+        this.balance -= 1
+        this.isRunning = true
         this.start()
       }
     },
@@ -344,7 +321,7 @@ export default {
     },
     start() {
       let that = this
-      let offsets = {
+      let offset = {
         reel1: this.latestOffsets.reel1,
         reel2: this.latestOffsets.reel2,
         reel3: this.latestOffsets.reel3
@@ -366,35 +343,66 @@ export default {
       }
       ;(function loop() {
         for (let i = 1; i <= 3; i++) {
+          /**
+           * if current reel is stopped, do not process it
+           */
           if (stopped[`reel${i}`]) {
             continue
           }
-          if (offsets[`reel${i}`] >= that.config.MAX_Y_OFFSET) {
+          /**
+           * MAX_Y_OFFSET - the latest offset, when 2 last symbols are visible on top and bottom win lines
+           * If current reel offset is >= than MAX_Y_OFFSET, move first 3 symbols to bottom
+           * and reset reel offset, so it looks like reel is spinning
+           */
+          if (offset[`reel${i}`] >= that.config.MAX_Y_OFFSET) {
             const arr = that[`reel${i}`].slice(0, 3)
             that.$refs[`reel${i}`].style.transform = `translateY(0)`
             that[`reel${i}`].splice(0, 3)
             that[`reel${i}`].push(...arr)
-            offsets[`reel${i}`] = 0
+            offset[`reel${i}`] = 0
           }
+
+          /**
+           * move current reel to its current offset and increase offset for next frame
+           */
           that.$refs[`reel${i}`].style.transform = `translateY(-${
-            offsets[`reel${i}`]
+            offset[`reel${i}`]
           }px)`
-          offsets[`reel${i}`] += that.config.SLOT_SPEED
+          offset[`reel${i}`] += that.config.SLOT_SPEED
+
+          /**
+           * If current reel has stop position (symbol and line)
+           * find that symbol in current reel
+           * move reel until symbol is on appropriate position to determine sibling symbols (top:bot, bot:top, mid:top,bot)
+           */
           if (stopAt[`reel${i}`]) {
             const stopIndex = that[`reel${i}`].findIndex(
               s => s.id === stopAt[`reel${i}`].id
             )
 
+            /**
+             * skip, if zero index, so if line is bot, we still could get the previous symbol (top line)
+             * skip, if offset is bigger than MAX_Y_OFFSET, so if line is top, we still could get the next symbol (bot line)
+             */
             if (
               stopIndex > 0 &&
               stopIndex * that.config.IMAGE_HEIGHT <= that.config.MAX_Y_OFFSET
             ) {
+              /**
+               * offsetPos - offset to be on specific line
+               */
               const offsetPos = Math.abs(
                 stopIndex * that.config.IMAGE_HEIGHT -
                   that.config.IMAGE_HEIGHT * stopAt[`reel${i}`].line.coeff
               )
 
-              if (offsets[`reel${i}`] >= offsetPos) {
+              /**
+               * if current offset is near offsetPos, stop the reel on the offsetPos and determine lines
+               */
+              if (offset[`reel${i}`] >= offsetPos) {
+                /**
+                 * If line is mid, the win line can be only mid, otherwise top can have bot and vice versa
+                 */
                 if (stopAt[`reel${i}`].line.id === 'mid') {
                   visibleOnLines[`reel${i}`].push(
                     that[`reel${i}`][stopIndex].id
@@ -419,6 +427,9 @@ export default {
                 ].style.transform = `translateY(-${offsetPos}px)`
                 stopAt[`reel${i}`] = null
                 stopped[`reel${i}`] = true
+                /**
+                 * save current offset to start from it later
+                 */
                 that.latestOffsets[`reel${i}`] = offsetPos
               }
             }
@@ -426,10 +437,10 @@ export default {
         }
 
         if (Object.values(stopped).every(v => v)) {
-          that.config.RUNNING = false
+          that.isRunning = false
           that.determineWinners(visibleOnLines)
         }
-        if (that.config.RUNNING) {
+        if (that.isRunning) {
           requestAnimationFrame(loop)
         }
       })()
@@ -440,8 +451,12 @@ export default {
         reel3: null
       }
 
+      /**
+       * In random mode, pick random symbol/line for reel
+       * In fixed mode, use values from debugReel state
+       */
       for (let i = 1; i <= 3; i++) {
-        if (!this.config.IS_FIXED) {
+        if (!this.isFixed) {
           const randomSymbolId =
             symbolTypes[Math.floor(Math.random() * symbolTypes.length)].id
           const randomLine = this.availableLines[
@@ -488,13 +503,16 @@ export default {
       }
       for (let i = 1; i <= 3; i++) {
         const reel = visibleOnLines[`reel${i}`]
+        /**
+         *  if reel has only 1 symbol visible - it can be only on the mid line
+         */
         if (reel.length === 1) {
-          lines.top.push('x')
+          lines.top.push(null)
           lines.mid.push(reel[0])
-          lines.bot.push('x')
+          lines.bot.push(null)
         } else {
           lines.top.push(reel[0])
-          lines.mid.push('x')
+          lines.mid.push(null)
           lines.bot.push(reel[1])
         }
       }
@@ -505,6 +523,9 @@ export default {
         payTable.forEach(type => {
           if (!lines[line].added) {
             if (type.line !== 'any') {
+              /**
+               * Line and symbols must match with symbols/line from pay type
+               */
               if (
                 line === type.line &&
                 lines[line].toString() === type.symbols.toString()
@@ -516,6 +537,10 @@ export default {
                 lines[line].added = true
               }
             } else {
+              /**
+               * If not combination, symbols must match with symbols from pay type
+               * If combination, line's symbols must match with any symbols from pay type
+               */
               if (!type.combination) {
                 if (lines[line].toString() === type.symbols.toString()) {
                   winLines.push({
@@ -538,11 +563,15 @@ export default {
         })
       })
 
+      /**
+       * set state for win line and rules table
+       * increase balance
+       */
       for (let win of winLines) {
         this.winLines[win.line] = true
         const rule = this.rulesTable.find(r => r.id === win.type.id)
         rule.isWin = true
-        this.config.PLAYER_BALANCE += rule.payout
+        this.balance += rule.payout
       }
     }
   }
