@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 text-gray-200">
+  <div class="container min-h-screen p-4 mx-auto text-gray-200">
     <div class="grid justify-center grid-flow-col grid-rows-3">
       <div
         v-for="(type, i) in rulesTable"
@@ -118,39 +118,38 @@
       </div>
     </div>
     <div class="flex justify-center mt-4 space-x-8">
-
-      <div class="space-y-4">
+      <div class="w-64 space-y-4">
         <div>
           <div>
-            Current balance:
-            <span
-              v-if="!config.IS_DEBUG"
-              class="font-bold text-yellow-400"
-            >{{ config.PLAYER_BALANCE }}</span>
+            Balance:
             <input
-              v-else
               type="number"
               v-model="config.PLAYER_BALANCE"
-              class="w-16 bg-gray-700"
+              :disabled="config.RUNNING"
+              class="w-16 ml-4 text-yellow-400 bg-gray-700"
+              min="1"
+              max="5000"
+              size="5"
             >
           </div>
         </div>
         <button
           @click="spin"
           :disabled="config.RUNNING"
-          class="inline-block p-2 border border-gray-300 rounded cursor-pointer"
+          class="inline-block p-2 border-2 border-gray-300 rounded cursor-pointer"
+          :class="{'cursor-not-allowed': config.RUNNING}"
         >Spin</button>
         <div class="space-x-2">
-          <label for="debug">Debug mode</label>
+          <label for="debug">Fixed mode</label>
           <input
             type="checkbox"
-            v-model="config.IS_DEBUG"
-            name=""
+            v-model="config.IS_FIXED"
             id="debug"
+            :disabled="config.RUNNING"
           >
         </div>
         <div
-          v-if="config.IS_DEBUG"
+          v-if="config.IS_FIXED"
           class="flex space-x-3"
         >
           <div>
@@ -244,7 +243,7 @@ export default {
   data() {
     return {
       config: {
-        IS_DEBUG: false,
+        IS_FIXED: false,
         SLOT_SPEED: 40,
         SYMBOL_COUNT: 5,
         IMAGE_HEIGHT: 121,
@@ -442,7 +441,7 @@ export default {
       }
 
       for (let i = 1; i <= 3; i++) {
-        if (!this.config.IS_DEBUG) {
+        if (!this.config.IS_FIXED) {
           const randomSymbolId =
             symbolTypes[Math.floor(Math.random() * symbolTypes.length)].id
           const randomLine = this.availableLines[
