@@ -123,6 +123,10 @@ import symbolTypes from './data/symbols'
 
 import RulesTable from './components/RulesTable'
 
+function randomElement(array) {
+  return array[Math.floor(Math.random() * array.length)]
+}
+
 export default {
   name: 'App',
   components: {
@@ -148,9 +152,9 @@ export default {
         mid: false,
         bot: false
       },
-      reel1: [],
-      reel2: [],
-      reel3: [],
+      reel1: [...symbolTypes],
+      reel2: [...symbolTypes],
+      reel3: [...symbolTypes],
       latestOffsets: {
         reel1: 0,
         reel2: 0,
@@ -176,11 +180,6 @@ export default {
         return type
       })
     }
-  },
-  created() {
-    this.reel1 = [...symbolTypes]
-    this.reel2 = [...symbolTypes]
-    this.reel3 = [...symbolTypes]
   },
   computed: {
     reelDimensions() {
@@ -361,11 +360,8 @@ export default {
        */
       for (let i = 1; i <= this.config.REEL_COUNT; i++) {
         if (!this.isFixed) {
-          const randomSymbolId =
-            symbolTypes[Math.floor(Math.random() * symbolTypes.length)].id
-          const randomLine = this.availableLines[
-            Math.floor(Math.random() * this.availableLines.length)
-          ].id
+          const randomSymbolId = randomElement(symbolTypes).id
+          const randomLine = randomElement(this.availableLines).id
           const lineCoeff = this.lineCoeff[randomLine]
 
           winners[`reel${i}`] = {
@@ -483,16 +479,6 @@ export default {
 </script>
 
 <style>
-.blinking {
-  animation: blink-animation 1s step-start infinite;
-}
-
-@keyframes blink-animation {
-  50% {
-    background: #d69e2e;
-  }
-}
-
 .gradient-to-bottom {
   background: linear-gradient(
     to bottom,

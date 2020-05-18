@@ -30,3 +30,15 @@ export default {
   props: ['data']
 }
 </script>
+
+<style>
+.blinking {
+  animation: blink-animation 1s step-start infinite;
+}
+
+@keyframes blink-animation {
+  50% {
+    background: #d69e2e;
+  }
+}
+</style>
