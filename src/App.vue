@@ -24,60 +24,16 @@
           <div
             class="relative bg-gray-300 border-2 border-blue-500 rounded"
             style="border-width: 4px"
+            v-for="n in config.REEL_COUNT"
+            :key="n"
           >
             <div
               :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
               class="relative z-10 overflow-hidden"
             >
-              <div ref="reel1">
+              <div :ref="`reel${n}`">
                 <img
-                  v-for="(s, i) in reel1"
-                  :key="i"
-                  class="block"
-                  :width="config.IMAGE_WIDTH"
-                  :height="config.IMAGE_HEIGHT"
-                  :src="s.imagePath"
-                  :alt="s.name"
-                >
-              </div>
-            </div>
-            <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
-            <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
-          </div>
-          <div
-            class="relative bg-gray-300 border-2 border-blue-500 rounded"
-            style="border-width: 4px"
-          >
-            <div
-              :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-              class="relative z-10 overflow-hidden"
-            >
-              <div ref="reel2">
-                <img
-                  v-for="(s, i) in reel2"
-                  :key="i"
-                  class="block"
-                  :width="config.IMAGE_WIDTH"
-                  :height="config.IMAGE_HEIGHT"
-                  :src="s.imagePath"
-                  :alt="s.name"
-                >
-              </div>
-            </div>
-            <div class="absolute top-0 left-0 z-20 w-full h-12 gradient-to-bottom"></div>
-            <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
-          </div>
-          <div
-            class="relative bg-gray-300 border-2 border-blue-500 rounded"
-            style="border-width: 4px"
-          >
-            <div
-              :style="{ 'height': `${reelDimensions.height}px`, 'width': `${reelDimensions.width}px` }"
-              class="relative z-10 overflow-hidden"
-            >
-              <div ref="reel3">
-                <img
-                  v-for="(s, i) in reel3"
+                  v-for="(s, i) in $data[`reel${n}`]"
                   :key="i"
                   class="block"
                   :width="config.IMAGE_WIDTH"
@@ -91,7 +47,6 @@
             <div class="absolute bottom-0 left-0 z-20 w-full h-12 gradient-to-top"></div>
           </div>
         </div>
-
       </div>
     </div>
     <div class="flex justify-center mt-4 space-x-8">
@@ -129,12 +84,14 @@
           v-if="isFixed"
           class="flex space-x-3"
         >
-          <div>
-            <div class="font-bold">Reel 1</div>
+          <div
+            v-for="n in config.REEL_COUNT"
+            :key="n"
+          >
+            <div class="font-bold">Reel {{ n }}</div>
             <select
               class="block mt-2 bg-gray-700"
-              id="debugReel1-symbol"
-              v-model="debugReel1.symbol"
+              v-model="$data[`debugReel${n}`].symbol"
             >
               <option
                 v-for="(s, i) in symbolTypes"
@@ -144,58 +101,7 @@
             </select>
             <select
               class="block mt-2 bg-gray-700"
-              id="debugReel1-line"
-              v-model="debugReel1.line"
-            >
-              <option
-                v-for="(l, i) in availableLines"
-                :key="i"
-                :value="l.id"
-              >{{ l.id }}</option>
-            </select>
-          </div>
-          <div>
-            <div class="font-bold">Reel 2</div>
-            <select
-              class="block mt-2 bg-gray-700"
-              id="debugReel2-symbol"
-              v-model="debugReel2.symbol"
-            >
-              <option
-                v-for="(s, i) in symbolTypes"
-                :key="i"
-                :value="s.id"
-              >{{ s.id }}</option>
-            </select>
-            <select
-              class="block mt-2 bg-gray-700"
-              id="debugReel2-line"
-              v-model="debugReel2.line"
-            >
-              <option
-                v-for="(l, i) in availableLines"
-                :key="i"
-                :value="l.id"
-              >{{ l.id }}</option>
-            </select>
-          </div>
-          <div>
-            <div class="font-bold">Reel 3</div>
-            <select
-              class="block mt-2 bg-gray-700"
-              id="debugReel2-symbol"
-              v-model="debugReel3.symbol"
-            >
-              <option
-                v-for="(s, i) in symbolTypes"
-                :key="i"
-                :value="s.id"
-              >{{ s.id }}</option>
-            </select>
-            <select
-              class="block mt-2 bg-gray-700"
-              id="debugReel3-line"
-              v-model="debugReel3.line"
+              v-model="$data[`debugReel${n}`].line"
             >
               <option
                 v-for="(l, i) in availableLines"
@@ -230,7 +136,8 @@ export default {
         IMAGE_WIDTH: 141,
         DURATION: 2000,
         DELAY: 500,
-        MAX_Y_OFFSET: 363
+        MAX_Y_OFFSET: 363,
+        REEL_COUNT: 3
       },
       isFixed: false,
       balance: 10,
@@ -342,13 +249,14 @@ export default {
         reel3: []
       }
       ;(function loop() {
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= that.config.REEL_COUNT; i++) {
           /**
-           * if current reel is stopped, do not process it
+           * if current reel has stopped, do not process it
            */
           if (stopped[`reel${i}`]) {
             continue
           }
+          const currentRef = that.$refs[`reel${i}`][0]
           /**
            * MAX_Y_OFFSET - the latest offset, when 2 last symbols are visible on top and bottom win lines
            * If current reel offset is >= than MAX_Y_OFFSET, move first 3 symbols to bottom
@@ -356,18 +264,16 @@ export default {
            */
           if (offset[`reel${i}`] >= that.config.MAX_Y_OFFSET) {
             const arr = that[`reel${i}`].slice(0, 3)
-            that.$refs[`reel${i}`].style.transform = `translateY(0)`
             that[`reel${i}`].splice(0, 3)
             that[`reel${i}`].push(...arr)
             offset[`reel${i}`] = 0
+            currentRef.style.transform = `translateY(0)`
           }
 
           /**
            * move current reel to its current offset and increase offset for next frame
            */
-          that.$refs[`reel${i}`].style.transform = `translateY(-${
-            offset[`reel${i}`]
-          }px)`
+          currentRef.style.transform = `translateY(-${offset[`reel${i}`]}px)`
           offset[`reel${i}`] += that.config.SLOT_SPEED
 
           /**
@@ -381,8 +287,8 @@ export default {
             )
 
             /**
-             * skip, if zero index, so if line is bot, we still could get the previous symbol (top line)
-             * skip, if offset is bigger than MAX_Y_OFFSET, so if line is top, we still could get the next symbol (bot line)
+             * skip if zero index, so if line is bot, we still could get the previous symbol (top line)
+             * skip if offset is bigger than MAX_Y_OFFSET, so if line is top, we still could get the next symbol (bot line)
              */
             if (
               stopIndex > 0 &&
@@ -422,9 +328,7 @@ export default {
                     that[`reel${i}`][stopIndex].id
                   )
                 }
-                that.$refs[
-                  `reel${i}`
-                ].style.transform = `translateY(-${offsetPos}px)`
+                currentRef.style.transform = `translateY(-${offsetPos}px)`
                 stopAt[`reel${i}`] = null
                 stopped[`reel${i}`] = true
                 /**
@@ -455,7 +359,7 @@ export default {
        * In random mode, pick random symbol/line for reel
        * In fixed mode, use values from debugReel state
        */
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= this.config.REEL_COUNT; i++) {
         if (!this.isFixed) {
           const randomSymbolId =
             symbolTypes[Math.floor(Math.random() * symbolTypes.length)].id
@@ -501,7 +405,7 @@ export default {
         mid: [],
         bot: []
       }
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= this.config.REEL_COUNT; i++) {
         const reel = visibleOnLines[`reel${i}`]
         /**
          *  if reel has only 1 symbol visible - it can be only on the mid line
